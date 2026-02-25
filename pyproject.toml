@@ -1,0 +1,24 @@
+[project]
+name = "pipelineetl"
+version = "0.1.0"
+authors = [{ name="Felipe dos Anjos"}]
+license = { text = "MIT" }
+keywords = ["ETL", "pipeline", "data"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent"
+]
+description = """
+Pipeline de dados completo para análise de faturamento de e-commerce,
+integrando múltiplas fontes, transformações, validação e carga em Data Warehouse
+com orquestração e versionamento.
+"""
+readme = "README.md"
+requires-python = ">=3.14"
+dependencies = [
+    "pandas>=3.0.1",
+    "psycopg2-binary>=2.9.11",
+    "requests>=2.32.5",
+    "sqlalchemy>=2.0.47",
+]

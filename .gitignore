@@ -10,6 +10,10 @@ wheels/
 .venv
 config/.env
 
+# IDE
 .idea
-data/*
-log/*
+
+# Folders and Files
+data
+logs
+notebooks

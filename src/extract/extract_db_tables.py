@@ -31,9 +31,9 @@ def extract_table_data(table: str) -> pd.DataFrame | None:
     return df
 
 
-def save_raw_table_data(df: pd.DataFrame, table: str) -> None:
+def save_raw_table_data(df: pd.DataFrame, table_name: str) -> None:
     output_dir = Path(__file__).parent.parent.parent
-    output_path = output_dir / 'data' / 'raw' / f'{table}_data.parquet'
+    output_path = output_dir / 'data' / 'raw' / f'{table_name}_data.parquet'
 
     output_path.parent.mkdir(parents=True, exist_ok=True)
 

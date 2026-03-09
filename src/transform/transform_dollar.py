@@ -34,4 +34,6 @@ def save_staging_dollar_data(df: pd.DataFrame) -> None:
 
     df.to_parquet(output_path, index=False)
 
-    logger.info(f'Arquivo salvo em {output_path}')
+    relative_path = str(output_path).split("data/", 1)[1]
+
+    logger.info(f'Arquivo salvo em {relative_path}')

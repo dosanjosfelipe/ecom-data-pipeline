@@ -3,30 +3,28 @@ import sqlalchemy
 import pandas as pd
 from pathlib import Path
 from sqlalchemy.exc import ArgumentError
-from database.connection import create_connection
-from utils.logging_config import setup_logging
+from database.connection import create_db_connection
 
-setup_logging()
 logger = logging.getLogger(__file__)
 
 
 def extract_table_data(table: str) -> pd.DataFrame | None:
-    engine = create_connection()
+    engine = create_db_connection()
 
     try:
         df = pd.read_sql(table, engine)
-    except sqlalchemy.exc.OperationalError:
-        logger.error('Não foi possível fazer a conexão com o banco de dados')
+    except sqlalchemy.exc.OperationalError as e:
+        logger.error(f' Não foi possível fazer a conexão com o banco de dados: {e}')
         return None
-    except sqlalchemy.exc.InterfaceError:
-        logger.error('Driver do banco de dados não instalado ou mal configurado')
+    except sqlalchemy.exc.InterfaceError as e:
+        logger.error(f' Driver do banco de dados não instalado ou mal configurado: {e}')
         return None
-    except sqlalchemy.exc.ProgrammingError:
-        logger.error(f'Tabela {table} não existe no banco de dados')
+    except sqlalchemy.exc.ProgrammingError as e:
+        logger.error(f' Tabela {table} não existe no banco de dados: {e}')
         return None
 
     if df.empty:
-        logger.warning('Nenhum dado foi retornado do banco de dados. Dataframe está vazio')
+        logger.warning(' Nenhum dado foi retornado do banco de dados. Dataframe está vazio')
 
     return df
 

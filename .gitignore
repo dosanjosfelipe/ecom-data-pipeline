@@ -17,3 +17,6 @@ config/.env
 data
 logs
 notebooks
+.env
+config/airflow.cfg
+/plugins

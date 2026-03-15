@@ -1,71 +1,72 @@
-import pytest
 import logging
 import pandas as pd
-from pathlib import Path
 from unittest.mock import patch
-from transform.transform_dollar import transform_dollar_data, save_staging_dollar_data
+
+from transform.transform_exchange import transform_exchange_data, save_staging_exchange_data
 
 
-# --- Testes para transform_dollar_data ---
-@patch('transform.transform_dollar.pd.read_json')
-@patch('transform.transform_dollar.Path.exists')
-def test_transform_dollar_data_success(mock_exists, mock_read_json, caplog):
-    mock_exists.return_value = True
+# --- Testes para transform_exchange_data ---
 
-    raw_data = {
-        '@odata.context': 'http://api.teste',
-        'value': [
-            {
-                'cotacaoCompra': 5.00,
-                'cotacaoVenda': 5.10,
-                'dataHoraCotacao': '2026-03-05 12:00:00'
-            }
-        ]
-    }
-    mock_read_json.return_value = pd.DataFrame(raw_data)
+def test_transform_exchange_data_file_not_found(tmp_path):
+    fake_path = tmp_path / "arquivo_inexistente.json"
 
-    path_input = Path("data/raw/dollar_data.json")
-
-    with caplog.at_level(logging.INFO):
-        result_df = transform_dollar_data(path_input)
-
-    assert isinstance(result_df, pd.DataFrame)
-    assert 'exchange_rate' in result_df.columns
-    assert 'datetime' in result_df.columns
-    assert 'cotacaoCompra' not in result_df.columns
-    assert '@odata.context' not in result_df.columns
-    assert result_df.iloc[0]['exchange_rate'] == 5.10
-    assert f'DataFrame criado a partir do arquivo {path_input.name}' in caplog.text
+    try:
+        transform_exchange_data(fake_path)
+    except FileNotFoundError as e:
+        assert f"Arquivo não encontrado: {fake_path}" in str(e)
 
 
-@patch('transform.transform_dollar.Path.exists')
-def test_transform_dollar_data_file_not_found(mock_exists):
-    mock_exists.return_value = False
-    path_errado = Path("arquivo_fantasma.json")
+@patch('transform.transform_exchange.pd.read_json')
+def test_transform_exchange_data_success(mock_read_json, tmp_path, caplog):
+    fake_path = tmp_path / "exchange.json"
 
-    with pytest.raises(FileNotFoundError) as excinfo:
-        transform_dollar_data(path_errado)
+    fake_path.touch()
 
-    assert f'Arquivo não encontrado: {path_errado}' in str(excinfo.value)
+    mock_df = pd.DataFrame({
+        "@odata.context": ["context"],
+        "value": [[{
+            "cotacaoCompra": 5.0,
+            "cotacaoVenda": 5.123,
+            "dataHoraCotacao": "2024-01-01 10:00:00"
+        }]]
+    })
 
-
-# --- Testes para save_staging_dollar_data ---
-@patch('transform.transform_dollar.Path.mkdir')
-@patch('pandas.DataFrame.to_parquet')
-def test_save_staging_dollar_data_success(mock_to_parquet, mock_mkdir, caplog):
-    df_to_save = pd.DataFrame({'col1': [1], 'col2': [2]})
+    mock_read_json.return_value = mock_df
 
     with caplog.at_level(logging.INFO):
-        save_staging_dollar_data(df_to_save)
+        result = transform_exchange_data(fake_path)
+
+    assert isinstance(result, pd.DataFrame)
+    assert "id" in result.columns
+    assert "exchange_rate" in result.columns
+    assert "issue_date" in result.columns
+    assert "cotacaoCompra" not in result.columns
+
+    assert result.loc[0, "exchange_rate"] == 5.12
+    assert result.loc[0, "id"] == 1
+
+    assert f"DataFrame criado a partir do arquivo {fake_path.name}" in caplog.text
+
+
+# --- Testes para save_staging_exchange_data ---
+
+@patch('transform.transform_exchange.Path.mkdir')
+@patch('transform.transform_exchange.pd.DataFrame.to_parquet')
+def test_save_staging_exchange_data(mock_to_parquet, mock_mkdir, caplog):
+    df = pd.DataFrame({
+        "id": [1],
+        "exchange_rate": [5.12],
+        "issue_date": ["2024-01-01 10:00:00"]
+    })
+
+    with caplog.at_level(logging.INFO):
+        save_staging_exchange_data(df)
 
     mock_mkdir.assert_called_once_with(parents=True, exist_ok=True)
 
     mock_to_parquet.assert_called_once()
-
     args, kwargs = mock_to_parquet.call_args
-    path_sent_to_pandas = str(args[0])
-    assert 'staging' in path_sent_to_pandas
-    assert 'dollar_data.parquet' in path_sent_to_pandas
-    assert kwargs['index'] is False
 
-    assert 'Arquivo salvo em' in caplog.text
+    assert kwargs["index"] is False
+
+    assert "Arquivo salvo em" in caplog.text

@@ -2,9 +2,7 @@ import logging
 import requests
 import json
 from pathlib import Path
-from utils.logging_config import setup_logging
 
-setup_logging()
 logger = logging.getLogger(__name__)
 
 

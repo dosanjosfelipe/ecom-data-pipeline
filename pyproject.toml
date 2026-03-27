@@ -9,6 +9,8 @@ classifiers = [
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent"
 ]
+[tool.pytest.ini_options]
+pythonpath = ["src"]
 description = """
 Pipeline de dados completo para análise de faturamento de e-commerce,
 integrando múltiplas fontes, transformações, validação e carga em Data Warehouse

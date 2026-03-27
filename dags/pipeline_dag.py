@@ -17,9 +17,12 @@ setup_logging()
 logger = logging.getLogger(__name__)
 
 
-def get_api_url() -> str:
-    return ("https://olinda.bcb.gov.br/olinda/servico/PTAX/versao/v1/odata/CotacaoDolarPeriodo("
-            f"dataInicial='02-01-2026',dataFinalCotacao='{date.today().strftime("%m-%d-%Y")}')?$format=json")
+def build_url():
+    data_final = date.today().strftime("%m-%d-%Y")
+
+    return (
+        f"https://olinda.bcb.gov.br/olinda/servico/PTAX/versao/v1/odata/CotacaoDolarPeriodo(dataInicial='02-01-2026',dataFinalCotacao='{data_final}')?$format=json"
+    )
 
 
 BASE_PATH = Path("/opt/airflow/data")
@@ -47,7 +50,7 @@ def ecommerce_pipeline():
     def extract():
         logging.info('ETAPA 1: EXTRACT\n')
 
-        url = get_api_url()
+        url = build_url()
         exchange_df = extract_exchange_data(url)
         save_raw_exchange_data(exchange_df)
         logging.info('cotação do dólar extraída e salva com sucesso\n')
